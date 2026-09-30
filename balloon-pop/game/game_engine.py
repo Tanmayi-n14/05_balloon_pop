@@ -1,9 +1,5 @@
 """
 GameEngine: owns all balloons, spawns new ones, and handles clicks.
-
-Starter version: one balloon type (random size, fixed points), no
-lives system yet, no timer yet. Click detection also has a known bug
-(see game/click_detection.py) that Task 1 asks you to fix.
 """
 
 import random
@@ -13,7 +9,6 @@ from game.click_detection import check_pop
 from game.renderer import WIDTH, HEIGHT
 
 SPAWN_INTERVAL_FRAMES = 45
-POINTS_PER_POP = 10
 
 
 class GameEngine:
@@ -23,16 +18,26 @@ class GameEngine:
         self.score = 0
 
     def _spawn_balloon(self):
-        radius = random.randint(16, 44)
+        radius = random.randint(18, 42)
         x = random.randint(radius + 10, WIDTH - radius - 10)
-        speed = random.uniform(1.5, 3.0)
-        self.balloons.append(Balloon(x=x, y=-radius, radius=radius, speed=speed))
+        speed = random.uniform(1.8, 3.2)
+
+        # 65% normal, 20% bonus, 15% penalty
+        b_type = random.choices(
+            [Balloon.TYPE_NORMAL, Balloon.TYPE_BONUS, Balloon.TYPE_PENALTY],
+            weights=[65, 20, 15],
+            k=1,
+        )[0]
+
+        self.balloons.append(
+            Balloon(x=x, y=-radius, radius=radius, speed=speed, balloon_type=b_type)
+        )
 
     def handle_click(self, pos):
         popped = check_pop(self.balloons, pos)
         if popped is not None:
             self.balloons.remove(popped)
-            self.score += POINTS_PER_POP
+            self.score = max(0, self.score + popped.points)
 
     def update(self):
         self.frames_until_spawn -= 1
